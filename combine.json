@@ -1,0 +1,90 @@
+{
+  "name": "CartCtl",
+  "t_strength": "2",
+  "dont_care_values": "no",
+  "values": "values",
+  "parameters": [
+    {
+      "identificator": "cart_slots_count",
+      "type": "integer",
+      "blocks": [
+        "cart_slots_count = 1",
+        "cart_slots_count = 2",
+        "cart_slots_count = 3 or cart_slots_count = 4"
+      ]
+    },
+    {
+      "identificator": "cart_max_capacity",
+      "type": "integer",
+      "blocks": [
+        "cart_max_capacity = 50",
+        "cart_max_capacity = 150",
+        "cart_max_capacity = 500"
+      ]
+    },
+    {
+      "identificator": "req_count",
+      "type": "integer",
+      "blocks": [
+        "req_count < 1",
+        "req_count = 1",
+        "req_count > 1"
+      ]
+    },
+    {
+      "identificator": "cart_capacity_full",
+      "type": "boolean",
+      "blocks": [
+        false,
+        true
+      ]
+    },
+    {
+      "identificator": "req_track_path_longer_than_one",
+      "type": "boolean",
+      "blocks": [
+        false,
+        true
+      ]
+    },
+    {
+      "identificator": "more_req_to_load_in_one_station",
+      "type": "boolean",
+      "blocks": [
+        false,
+        true
+      ]
+    },
+    {
+      "identificator": "more_req_to_unload_in_one_station",
+      "type": "boolean",
+      "blocks": [
+        false,
+        true
+      ]
+    },
+    {
+      "identificator": "time_between_two_requests_less_than_minute",
+      "type": "boolean",
+      "blocks": [
+        false,
+        true
+      ]
+    }
+  ],
+  "constraints": [
+    "req_count.1 -> cart_capacity_full.2",
+    "req_count.1 -> req_track_path_longer_than_one.2",
+    "req_count.1 -> more_req_to_unload_in_one_station.2",
+    "req_count.2 -> more_req_to_unload_in_one_station.2",
+    "req_count.1 -> more_req_to_load_in_one_station.2",
+    "req_count.2 -> more_req_to_load_in_one_station.2",
+    "cart_max_capacity.1 -> !cart_slots_count.1",
+    "cart_max_capacity.3 -> !cart_slots_count.3",
+    "cart_slots_count.1 -> !more_req_to_unload_in_one_station.1",
+    "cart_slots_count.1 -> !cart_max_capacity.1",
+    "cart_slots_count.3 -> !cart_max_capacity.3",
+    "req_count.1 -> time_between_two_requests_less_than_minute.2",
+    "req_count.2 -> time_between_two_requests_less_than_minute.2"
+  ]
+}
