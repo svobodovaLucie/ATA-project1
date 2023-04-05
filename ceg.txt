@@ -14,7 +14,7 @@ t4: časové pásmo od 1 minuty od nastavení prioritního požadavku
 7: naložení materiálu na vozík nepřekročí maximální nosnost vozíku 
 
 Effects:
-71: materiál je naložen 
+71: materiál bez prioritní vlastnosti je naložen 
 72: nastavení prioritního požadavku 
 73: materiál s prioritní vlastností je naložen 
 74: vyvolání výjimky EX_PRIOR
