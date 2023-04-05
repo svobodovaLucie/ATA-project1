@@ -1,11 +1,11 @@
 # Dokumentace testovací sady pro řízení vozíku v robotické továrně
 
-Automatizované testování a dynamická analýza (ATA), Projekt 1
-FIT VUT 2022/2023 
-Autor: Lucie Svobodová, xsvobo1x@stud.fit.vutbr.cz
+Automatizované testování a dynamická analýza (ATA), Projekt 1  
+FIT VUT 2022/2023  
+Autor: Lucie Svobodová, xsvobo1x@stud.fit.vutbr.cz  
 
 ## Graf příčin a důsledků (CEG)
-Graf příčin a důsledků, který byl vygenerován pomocí nástroje ceg.testos.org, je přiložen v souborech `ceg.txt` (konfigurace) a `ceg.png` (vygenerovaný graf ve formě obrázku). Z vygenerovaných testovacích scénářů bylo vybráno 5 scénářů tak, aby byly pokryty všechny příčiny a důsledky.
+Graf příčin a důsledků, který byl vygenerován pomocí nástroje [ceg.testos.org](http://ceg.testos.org/), je přiložen v souborech `ceg.txt` (konfigurace) a `ceg.png` (vygenerovaný graf ve formě obrázku). Z vygenerovaných testovacích scénářů bylo vybráno 5 scénářů tak, aby byly pokryty všechny příčiny a důsledky.
 
 ### Rozhodovací tabulka pro vybraných 5 testovacích scénářů
 TestId | Popis                                                               | `test_ceg1` | `test_ceg2` | `test_ceg3` | `test_ceg4` | `test_ceg5` |
@@ -101,7 +101,7 @@ V následujících tabulkách jsou vypsány identifikované charakteristiky vstu
 | 2 | false |
 
 ### Kombinace bloků charakteristik
-Charakteristiky parametrů a omezení kombinací bloků byla uložena do souboru `combine.json`. Tento soubor byl použit pro nástroj combine.testos.org, pomocí něhož byly vygenerovány minimální kombinace dvojic charakteristik.
+Charakteristiky parametrů a omezení kombinací bloků byla uložena do souboru `combine.json`. Tento soubor byl použit pro nástroj [combine.testos.org](http://combine.testos.org/), pomocí něhož byly vygenerovány minimální kombinace dvojic charakteristik.
 
 TestId | cart_slots_count | cart_max_capacity | req_count | cart_capacity_full | req_track_path_longer_than_one |  more_req_to_load_in_one_station |  more_req_to_unload_in_one_station | time_between_two_requests_less_than_minute |
 | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
