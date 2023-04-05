@@ -13,6 +13,9 @@ class Status(enum.Enum):
     UnloadOnly = 1  # must unload only
     Idle = 2        # controller does not know what to do at the moment
 
+class PrioRequestTimeout(Exception):
+    "Exception for priority request timeout"
+
 class CartCtl:
     "Cart controller"
     def __init__(self, cart_device, factory):
