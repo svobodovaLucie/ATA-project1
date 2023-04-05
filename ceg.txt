@@ -1,0 +1,51 @@
+Causes:
+// časová pásma
+t1: časové pásmo kratší než 1 minuta od nastavení požadavku
+t2: časové pásmo od 1 minuty od nastavení požadavku 
+t3: časové pásmo kratší než 1 minuta od nastavení prioritního požadavku
+t4: časové pásmo od 1 minuty od nastavení prioritního požadavku 
+// další příčiny 
+1: je nastaven požadavek na přesun materiálu bez prioritní vlastnosti 
+2: vozík přijel do zdrojové stanice v časovém pásmu t1 
+3: je nastaven požadavek na přesun materiálu s prioritní vlastností 
+4: vozík přijel do zdrojové stanice v časovém pásmu t3 
+5: vozík nemá naložený materiál s prioritní vlastností 
+6: vozík má alespoň jeden volný slot 
+7: naložení materiálu na vozík nepřekročí maximální nosnost vozíku 
+
+Effects:
+71: materiál je naložen 
+72: nastavení prioritního požadavku 
+73: materiál s prioritní vlastností je naložen 
+74: vyvolání výjimky EX_PRIOR
+75: přepnutí do režimu pouze_vykládka
+76: přepnutí do režimu nakládka_vykládka
+
+Rules:
+71 = 2 && 6 && 7
+72 = t2
+73 = 4 && 6 && 7
+74 = t4 
+75 = 4
+76 = 5 && 4
+
+Constraints:
+// časové závislosti 
+t2->t1 
+t3->t2 
+t4->t3 
+// časové pásmo t2 začíná po nastavení požadavku
+1->t2 
+t2->1
+// naložení materiálu ve fázi t1 
+2->t1 
+// nastavení prioritního požadavku v pásmu t2
+3->t2 
+t2->3
+// časová fáze t3 začíná po nastavení prioritního požadavku 
+3->t3
+// naložení materiálu v pásmu t3
+4->t3  
+// vzájemné vyloučení vyzvednutí materiálu a začátku dalšího časového pásma
+E: 2, t2
+E: 4, t4
