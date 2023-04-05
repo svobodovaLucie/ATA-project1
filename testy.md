@@ -1,13 +1,13 @@
-#Dokumentace testovací sady pro řízení vozíku v robotické továrně
+# Dokumentace testovací sady pro řízení vozíku v robotické továrně
 
 Automatizované testování a dynamická analýza (ATA), Projekt 1
 FIT VUT 2022/2023 
 Autor: Lucie Svobodová, xsvobo1x@stud.fit.vutbr.cz
 
-##Graf příčin a důsledků (CEG)
+## Graf příčin a důsledků (CEG)
 Graf příčin a důsledků, který byl vygenerován pomocí nástroje ceg.testos.org, je přiložen v souborech `ceg.txt` (konfigurace) a `ceg.png` (vygenerovaný graf ve formě obrázku). Z vygenerovaných testovacích scénářů bylo vybráno 5 scénářů tak, aby byly pokryty všechny příčiny a důsledky.
 
-###Rozhodovací tabulka pro vybraných 5 testovacích scénářů
+### Rozhodovací tabulka pro vybraných 5 testovacích scénářů
 TestId | Popis                                                               | `test_ceg1` | `test_ceg2` | `test_ceg3` | `test_ceg4` | `test_ceg5` |
 | :--: | :-----------------------------------------------------------------: | :---------: | :---------: | :---------: | :---------: | :---------: |
 | t1   | časové pásmo kratší než 1 minuta od nastavení požadavku             | 0 | 1 | 1 | 1 | 1 | 
@@ -28,7 +28,7 @@ TestId | Popis                                                               | `
 | 75   | přepnutí do režimu pouze_vykládka                                   | false | true  | false | false | true  |
 | 76   | přepnutí do režimu nakládka_vykládka                                | false | true  | false | false | true  |
 
-##Vstupní parametry testu
+## Vstupní parametry testu
 Vstupní parametry testu, které byly identifikovány jako nejdůležitější, jsou vypsány v následující tabulce.
 | Identifikátor parametru               | Popis                                        |
 | ------------------------------------- | -------------------------------------------- |
@@ -41,7 +41,7 @@ Vstupní parametry testu, které byly identifikovány jako nejdůležitější, 
 | num_requests_to_unload_in_one_station | počet požadavků se shodnou cílovou stanicí   |
 | time_between_two_requests             | čas mezi naplánováním více požadavků         |
 
-###Charakteristiky parametrů
+### Charakteristiky parametrů
 V následujících tabulkách jsou vypsány identifikované charakteristiky vstupních parametrů, jejich rozdělení na bloky a omezení mezi jednotlivými bloky.
 
 | cart_slots_count | počet slotů vozíku |
@@ -100,7 +100,7 @@ V následujících tabulkách jsou vypsány identifikované charakteristiky vstu
 | 1 | true |
 | 2 | false |
 
-###Kombinace bloků charakteristik
+### Kombinace bloků charakteristik
 Charakteristiky parametrů a omezení kombinací bloků byla uložena do souboru `combine.json`. Tento soubor byl použit pro nástroj combine.testos.org, pomocí něhož byly vygenerovány minimální kombinace dvojic charakteristik.
 
 TestId | cart_slots_count | cart_max_capacity | req_count | cart_capacity_full | req_track_path_longer_than_one |  more_req_to_load_in_one_station |  more_req_to_unload_in_one_station | time_between_two_requests_less_than_minute |
@@ -120,10 +120,10 @@ TestId | cart_slots_count | cart_max_capacity | req_count | cart_capacity_full |
 `combine13`| 2 | 1 | 3 | true  | true  | true  | true  | false
 `combine14`| 2 | 2 | 3 | true  | true  | false | false | true
 
-##Pokrytí požadavků na test automatizovanými testy
+## Pokrytí požadavků na test automatizovanými testy
 Následující tabulky zobrazují pokrytí požadavků na test automatizovanými testy. První sloupec reprezentuje jednotlivá TestId testovacích případů z rozhodovací tabulky a z tabulky kombinací bloků charakteristik, druhý sloupec pak metody implementované v souboru `cartctl_test.py`. 
 
-###Pokrytí kombinací z rozhodovací tabulky automatickými testy
+### Pokrytí kombinací z rozhodovací tabulky automatickými testy
 | TestId | Název implementované metody |
 | :----: | :-------------------------: |
 | `ceg1` | `test_ceg1_combine1`        |
@@ -132,7 +132,7 @@ Následující tabulky zobrazují pokrytí požadavků na test automatizovanými
 | `ceg4` | `test_ceg4`                 |
 | `ceg5` | `test_ceg5`                 |
 
-###Pokrytí kombinací bloků charakteristik automatickými testy
+### Pokrytí kombinací bloků charakteristik automatickými testy
 | TestId      | Název implementované metody |
 | :---------: | :-------------------------: | 
 | `combine1`  | `test_ceg1_combine1`        |
