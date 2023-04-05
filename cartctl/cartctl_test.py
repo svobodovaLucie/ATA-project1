@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
 """
-Example of usage/test of Cart controller implementation.
+Tests for Cart controller implementation.
+Project:     Automated Testing and Dynamic Analysis (ATA) - project 1
+Author:      Lucie Svobodova, xsvobo1x
+University:  FIT BUT, 2022/2023
 """
-
 import sys
-from cartctl import CartCtl, Status as CartCtlStatus
+from cartctl import CartCtl, Status as CartCtlStatus, PrioRequestTimeout
 from cart import Cart, CargoReq, Status as CartStatus, CartError
 from jarvisenv import Jarvis
 import unittest
@@ -101,8 +103,8 @@ class TestCartRequests(unittest.TestCase):
         self.assertEqual('unloaded', braceletR.context)
         self.assertEqual('unloaded', braceletL.context)
     
-    def test_combine1(self):
-        "Test: Combine1"
+    def test_ceg1_combine1(self):
+        "Test: Ceg1_Combine1, covers Ceg1, Combine1"
 
         def on_move(c: Cart):
             "callback for moving the cart"
@@ -110,8 +112,7 @@ class TestCartRequests(unittest.TestCase):
             self.fail("Cart shouldn't be moving.")
 
         # Setup Cart
-        # 1 slot, 150 kg max payload capacity, 2=max debug
-        cart_dev = Cart(1, 150, 2)
+        cart_dev = Cart(1, 150, 0)
         cart_dev.onmove = on_move
 
         # Setup Cart Controller
@@ -128,6 +129,248 @@ class TestCartRequests(unittest.TestCase):
         self.assertTrue(cart_dev.empty())
         self.assertEqual(cart_dev.status, CartStatus.Idle)
         self.assertEqual(c.status, CartCtlStatus.Idle)
+
+    def test_ceg2(self):
+        "Test: Ceg2"
+
+        def add_load(c: CartCtl, cargo_req: CargoReq):
+            "callback for schedulled load"
+            log('%d: Requesting %s at %s' % \
+                (Jarvis.time(), cargo_req, cargo_req.src))
+            c.request(cargo_req)
+
+        def on_move(c: Cart):
+            "callback for moving the cart"
+            log('%d: Cart is moving %s->%s' % (Jarvis.time(), c.pos, c.data))
+            self.assertEqual(c.status, CartStatus.Moving)
+
+        def on_load(c: Cart, cargo_req: CargoReq):
+            "callback for loading the cart"
+            log('%d: Cart at %s: loading: %s' % (Jarvis.time(), c.pos, cargo_req))
+            log(c)
+            self.fail("Cart shouldn't be loaded because the request is too heavy.")
+
+        def on_unload(c: Cart, cargo_req: CargoReq):
+            "callback for unloading the cart"
+            log('%d: Cart at %s: unloading: %s' % (Jarvis.time(), c.pos, cargo_req))
+            log(c)
+            self.fail("Cart shouldn't contain any requests.")
+
+        # Setup Cart
+        cart_dev = Cart(2, 50, 0)
+        cart_dev.onmove = on_move
+
+        # Setup Cart Controller
+        c = CartCtl(cart_dev, Jarvis)
+
+        # Setup Cargo to move
+        req1 = CargoReq('D', 'B', 74, 'GLASS74x82')
+        req1.onload = on_load
+        req1.onunload = on_unload
+
+        # Setup Plan
+        Jarvis.reset_scheduler()
+        #         when  event     called_with_params
+        Jarvis.plan(1, add_load, (c,req1))
+        
+        # Exercise + Verify indirect output
+        Jarvis.run()
+
+        # Verify direct output
+        log(cart_dev)
+        self.assertTrue(cart_dev.empty())
+        self.assertEqual(cart_dev.status, CartStatus.Idle)
+        self.assertEqual(c.status, CartCtlStatus.Idle)
+
+    def test_ceg3(self):
+        "Test: Ceg3"
+
+        def add_load(c: CartCtl, cargo_req: CargoReq):
+            "callback for schedulled load"
+            log('%d: Requesting %s at %s' % \
+                (Jarvis.time(), cargo_req, cargo_req.src))
+            c.request(cargo_req)
+            self.assertFalse(cargo_req.prio)
+            Jarvis._sleep(59)
+            c.update_prio_requests()
+            log('%d: After 59 seconds: %s at %s' % \
+                (Jarvis.time(), cargo_req, cargo_req.src))
+            self.assertFalse(cargo_req.prio)
+            Jarvis._sleep(1)
+            c.update_prio_requests()
+            log('%d: After one more socend: %s at %s' % \
+                (Jarvis.time(), cargo_req, cargo_req.src))
+            self.assertTrue(cargo_req.prio)
+            Jarvis._sleep(60)
+            c.update_prio_requests()
+            log('%d: After another 60 seconds: %s at %s' % \
+                (Jarvis.time(), cargo_req, cargo_req.src))
+            self.assertTrue(cargo_req.prio)
+
+        def on_move(c: Cart):
+            "callback for moving the cart"
+            log('%d: Cart is moving %s->%s' % (Jarvis.time(), c.pos, c.data))
+            self.assertEqual(c.status, CartStatus.Moving)
+
+        def on_load(c: Cart, cargo_req: CargoReq):
+            "callback for loading the cart"
+            log('%d: Cart at %s: loading: %s' % (Jarvis.time(), c.pos, cargo_req))
+            log(c)
+            self.fail("Cart shouldn't be loaded because the request waited too long.")
+
+        def on_unload(c: Cart, cargo_req: CargoReq):
+            "callback for unloading the cart"
+            log('%d: Cart at %s: unloading: %s' % (Jarvis.time(), c.pos, cargo_req))
+            log(c)
+            self.fail("Cart shouldn't contain any requests.")
+
+        # Setup Cart
+        cart_dev = Cart(2, 50, 0)
+        cart_dev.onmove = on_move
+
+        # Setup Cart Controller
+        c = CartCtl(cart_dev, Jarvis)
+
+        # Setup Cargo to move
+        req1 = CargoReq('D', 'B', 1, 'baseball bat')
+        req1.onload = on_load
+        req1.onunload = on_unload
+        # Setup Plan
+        Jarvis.reset_scheduler()
+        #         when  event     called_with_params
+        Jarvis.plan(0, add_load, (c,req1))
+
+        # Exercise + Verify indirect output
+        self.assertRaises(PrioRequestTimeout, Jarvis.run)
+        
+        # Verify direct output
+        log(cart_dev)
+        self.assertTrue(cart_dev.empty())
+        self.assertEqual(cart_dev.status, CartStatus.Idle)
+        self.assertEqual(c.status, CartCtlStatus.Idle)    
+
+    def test_ceg4(self):
+        "Test: Ceg4"
+
+        def add_load(c: CartCtl, cargo_req: CargoReq):
+            "callback for schedulled load"
+            log('%d: Requesting %s at %s' % \
+                (Jarvis.time(), cargo_req, cargo_req.src))
+            c.request(cargo_req)
+            self.assertFalse(cargo_req.prio)
+
+        def on_move(c: Cart):
+            "callback for moving the cart"
+            log('%d: Cart is moving %s->%s' % (Jarvis.time(), c.pos, c.data))
+            self.assertEqual(c.status, CartStatus.Moving)
+
+        def on_load(c: Cart, cargo_req: CargoReq):
+            "callback for loading the cart"
+            log('%d: Cart at %s: loading: %s' % (Jarvis.time(), c.pos, cargo_req))
+            log(c)
+            self.assertEqual('WOOD', cargo_req.content)
+            self.assertIn(cargo_req, c.slots)
+            self.assertEqual('A', c.pos)
+            self.assertFalse(cargo_req.prio)
+            cargo_req.context = 'loaded'
+
+        def on_unload(c: Cart, cargo_req: CargoReq):
+            "callback for unloading the cart"
+            log('%d: Cart at %s: unloading: %s' % (Jarvis.time(), c.pos, cargo_req))
+            log(c)
+            self.assertFalse(cargo_req.prio)
+            self.assertEqual('loaded', cargo_req.context)
+            self.assertEqual('WOOD', cargo_req.content)
+            self.assertEqual('B', c.pos)
+            self.assertNotIn(cargo_req, c.slots)
+            cargo_req.context = 'unloaded'
+
+        # Setup Cart
+        cart_dev = Cart(2, 500, 0)
+        cart_dev.onmove = on_move
+
+        # Setup Cart Controller
+        c = CartCtl(cart_dev, Jarvis)
+
+        # Setup Cargo to move
+        req1 = CargoReq('A', 'B', 100, 'WOOD')
+        req1.onload = on_load
+        req1.onunload = on_unload
+        # Setup Plan
+        Jarvis.reset_scheduler()
+        #         when  event     called_with_params
+        Jarvis.plan(55, add_load, (c,req1))
+
+        # Exercise + Verify indirect output
+        Jarvis.run()        
+        
+        # Verify direct output
+        log(cart_dev)
+        self.assertTrue(cart_dev.empty())
+        self.assertEqual(cart_dev.status, CartStatus.Idle)
+        self.assertEqual(c.status, CartCtlStatus.Idle)    
+
+    def test_ceg5(self):
+        "Test: Ceg5"
+
+        def add_load(c: CartCtl, cargo_req: CargoReq):
+            "callback for schedulled load"
+            log('%d: Requesting %s at %s' % \
+                (Jarvis.time(), cargo_req, cargo_req.src))
+            c.request(cargo_req)
+            self.assertFalse(cargo_req.prio)
+
+        def on_move(c: Cart):
+            "callback for moving the cart"
+            log('%d: Cart is moving %s->%s' % (Jarvis.time(), c.pos, c.data))
+            self.assertEqual(c.status, CartStatus.Moving)
+            Jarvis._sleep(10)
+
+        def on_load(c: Cart, cargo_req: CargoReq):
+            "callback for loading the cart"
+            log('%d: Cart at %s: loading: %s' % (Jarvis.time(), c.pos, cargo_req))
+            log(c)
+            self.assertEqual('full box of croissants', cargo_req.content)
+            self.assertIn(cargo_req, c.slots)
+            self.assertEqual('C', c.pos)
+            self.assertTrue(cargo_req.prio)
+
+        def on_unload(c: Cart, cargo_req: CargoReq):
+            "callback for unloading the cart"
+            log('%d: Cart at %s: unloading: %s' % (Jarvis.time(), c.pos, cargo_req))
+            log(c)
+            self.assertTrue(cargo_req.prio)
+            #self.assertEqual('loaded', cargo_req.context)
+            self.assertEqual('full box of croissants', cargo_req.content)
+            self.assertEqual('A', c.pos)
+            self.assertNotIn(cargo_req, c.slots)
+            self.assertEqual(cargo_req.context.status, CartCtlStatus.UnloadOnly)
+            
+        # Setup Cart
+        cart_dev = Cart(4, 150, 0)
+        cart_dev.onmove = on_move
+
+        # Setup Cart Controller
+        c = CartCtl(cart_dev, Jarvis)
+
+        # Setup Cargo to move
+        req1 = CargoReq('C', 'A', 50, 'full box of croissants')
+        req1.context = c
+        req1.onload = on_load
+        req1.onunload = on_unload
+        # Setup Plan
+        Jarvis.reset_scheduler()
+        #         when  event     called_with_params
+        Jarvis.plan(1000, add_load, (c,req1))
+
+        # Exercise + Verify indirect output
+        Jarvis.run()        
+        
+        # Verify direct output
+        log(cart_dev)
+        self.assertTrue(cart_dev.empty())
+        self.assertEqual(cart_dev.status, CartStatus.Idle)
+        self.assertEqual(c.status, CartCtlStatus.Idle)    
 
     def test_combine2(self):
         "Test: Combine2"
@@ -683,6 +926,7 @@ class TestCartRequests(unittest.TestCase):
             log('%d: Requesting %s at %s' % \
                 (Jarvis.time(), cargo_req, cargo_req.src))
             c.request(cargo_req)
+            Jarvis._sleep(10)
 
         def on_move(c: Cart):
             "callback for moving the cart"
@@ -815,13 +1059,14 @@ class TestCartRequests(unittest.TestCase):
             "callback for moving the cart"
             log('%d: Cart is moving %s->%s' % (Jarvis.time(), c.pos, c.data))
             self.assertEqual(c.status, CartStatus.Moving)
+            Jarvis._sleep(10)
 
         def on_load(c: Cart, cargo_req: CargoReq):
             "callback for loading the cart"
             log('%d: Cart at %s: loading: %s' % (Jarvis.time(), c.pos, cargo_req))
             log(c)
-            self.assertEqual('D', c.pos)
             self.assertIn(cargo_req, c.slots)
+            self.assertEqual('D', c.pos)
             if cargo_req.content == 'req3':
                 c.empty()
             cargo_req.context = 'loaded'
@@ -836,7 +1081,7 @@ class TestCartRequests(unittest.TestCase):
             cargo_req.context = 'unloaded'
             
         # Setup Cart
-        cart_dev = Cart(2, 50, 2)
+        cart_dev = Cart(2, 50, 0)
         cart_dev.onmove = on_move
 
         # Setup Cart Controller
@@ -860,19 +1105,18 @@ class TestCartRequests(unittest.TestCase):
         #         when  event     called_with_params
         Jarvis.plan(0, add_load, (c,req1))
         Jarvis.plan(1, add_load, (c,req2))
-        Jarvis.plan(2, add_load, (c,req3))
+        Jarvis.plan(62, add_load, (c,req3))
         
         # Exercise + Verify indirect output
         log(cart_dev)
-        Jarvis.run()
-
-        # Verify direct output
-        self.assertTrue(cart_dev.empty())
-        self.assertEqual('unloaded', req1.context)
-        self.assertEqual('unloaded', req2.context)
-        self.assertEqual('unloaded', req3.context)
-        self.assertEqual(cart_dev.status, CartStatus.Idle)
-        self.assertEqual(c.status, CartCtlStatus.Idle)
+        self.assertRaises(PrioRequestTimeout, Jarvis.run)
+        # Verify direct output without exception
+        #self.assertTrue(cart_dev.empty())
+        #self.assertEqual('unloaded', req1.context)
+        #self.assertEqual('unloaded', req2.context)
+        #self.assertEqual('unloaded', req3.context)
+        #self.assertEqual(cart_dev.status, CartStatus.Idle)
+        #self.assertEqual(c.status, CartCtlStatus.Idle)
 
     def test_combine14(self):
         "Test: Combine14"
@@ -935,7 +1179,7 @@ class TestCartRequests(unittest.TestCase):
         Jarvis.plan(2, add_load, (c,req1))
         Jarvis.plan(111, add_load, (c,req2))
         
-        # Exercise + Verify Raised Exception
+        # Exercise + Verify
         log(cart_dev)
         Jarvis.run()
         self.assertTrue(cart_dev.empty())
@@ -943,7 +1187,7 @@ class TestCartRequests(unittest.TestCase):
         self.assertEqual('unloaded', req2.context)
         self.assertEqual(cart_dev.status, CartStatus.Idle)
         self.assertEqual(c.status, CartCtlStatus.Idle)
-
+    
 
 if __name__ == "__main__":
     unittest.main()
